@@ -5,12 +5,14 @@ from geopy import Nominatim
 
 
 # Создаем объект бота
-bot = telebot.TeleBot('TOKEN')
+bot = telebot.TeleBot('7117428954:AAGYDL9dS7gtQghi1eujdNom65-mRKg1vQ4')
 # Работа с картами
 geolocator = Nominatim(user_agent='Mozilla/5.0 '
                                   '(Windows NT 10.0; Win64; x64) '
                                   'AppleWebKit/537.36 (KHTML, like Gecko) '
                                   'Chrome/124.0.0.0 Safari/537.36')
+# Временные данные
+users = {}
 
 ## Сторона пользователя ##
 # Обработчик команды /start
@@ -18,10 +20,12 @@ geolocator = Nominatim(user_agent='Mozilla/5.0 '
 def start(msg):
     user_id = msg.from_user.id
     check = db.check_user(user_id)
+    products_from_db = db.get_all_pr()
     if check:
         bot.send_message(user_id,
                             f'Добро пожаловать, '
-                            f'{msg.from_user.first_name}')
+                            f'{msg.from_user.first_name}!\n'
+                            f'Выберите пункт меню:', reply_markup=bt.pr_buttons(products_from_db))
     else:
         bot.send_message(user_id, 'Здравствуйте! Давайте начнем регистрацию!\n'
                                   'Введите свое имя!')
@@ -57,6 +61,28 @@ def get_num(msg, user_name):
         bot.register_next_step_handler(msg, get_num, user_name)
 
 
+# Выбор количества
+@bot.callback_query_handler(lambda call: call.data in ['increment', 'decrement', 'to_cart', 'back'])
+def choose_count(call):
+    chat_id = call.message.chat.id
+    if call.data == 'increment':
+        bot.edit_message_reply_markup(chat_id=chat_id, message_id=call.message.message_id,
+                                      reply_markup=bt.choose_pr_count_buttons('increment', users[chat_id]['pr_amount']))
+        users[chat_id]['pr_amount'] += 1
+    elif call.data == 'decrement':
+        bot.edit_message_reply_markup(chat_id=chat_id, message_id=call.message.message_id,
+                                      reply_markup=bt.choose_pr_count_buttons('decrement', users[chat_id]['pr_amount']))
+        users[chat_id]['pr_amount'] -= 1
+    elif call.data == 'to_cart':
+        pr_name = db.get_exact_pr(users[chat_id]['pr_name'])[1]
+        db.add_pr_to_cart(chat_id, pr_name, users[chat_id]['pr_amount'])
+    elif call.data == 'back':
+        products_from_db = db.get_all_pr()
+        bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+        bot.send_message(chat_id, 'Перенаправляю вас обратно в меню',
+                         reply_markup=bt.pr_buttons(products_from_db))
+
+
 # Этап получения локации
 def get_loc(msg, user_name, user_num):
     user_id = msg.from_user.id
@@ -73,6 +99,20 @@ def get_loc(msg, user_name, user_num):
         bot.send_message(user_id, 'Отправьте локацию через кнопку!')
         # Возврат на этап получения локации
         bot.register_next_step_handler(msg, get_loc, user_name, user_num)
+
+
+# Выбор товара и его количества
+@bot.callback_query_handler(lambda call: int(call.data) in db.get_pr_id())
+def choose_count(call):
+    chat_id = call.message.chat.id
+    users[chat_id] = {'pr_name': call.data, 'pr_amount': 1}
+    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
+    pr_info = db.get_exact_pr(call.data)
+    bot.send_photo(chat_id, photo=pr_info[4], caption=f'Название товара: {pr_info[1]}\n'
+                                                      f'Описание товара: {pr_info[2]}\n'
+                                                      f'Цена товара: {pr_info[3]}\n'
+                                                      f'Количество на складе: {pr_info[5]}',
+                   reply_markup=bt.choose_pr_count_buttons())
 
 
 ## Сторона администратора ##

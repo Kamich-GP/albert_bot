@@ -44,6 +44,13 @@ def get_all_pr():
     return sql.execute('SELECT pr_id, pr_name, pr_count FROM products;').fetchall()
 
 
+# Метод для проверки товара
+def get_pr_id():
+    result = sql.execute('SELECT pr_id FROM products;').fetchall()
+    pr_list = [i[0] for i in result]
+    return pr_list
+
+
 # Метод для вывода определенного товара
 def get_exact_pr(id):
     return sql.execute('SELECT * FROM products WHERE pr_id=?;', (id,)).fetchone()
