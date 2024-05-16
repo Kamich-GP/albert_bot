@@ -85,3 +85,17 @@ def choose_pr_count_buttons(plus_or_minus='', amount=1):
     kb.add(minus, count, plus)
     kb.row(to_cart, back)
     return kb
+
+
+# Кнопки корзины
+def cart_buttons():
+    # Создаем пространство
+    kb = types.InlineKeyboardMarkup(row_width=2)
+    # Создаем сами кнопки
+    clear = types.InlineKeyboardButton(text='Очистить корзину', callback_data='clear')
+    order = types.InlineKeyboardButton(text='Оформить заказ', callback_data='order')
+    back = types.InlineKeyboardButton(text='Назад', callback_data='back')
+    # Добавляем кнопки в пространство
+    kb.add(clear, order)
+    kb.row(back)
+    return kb
