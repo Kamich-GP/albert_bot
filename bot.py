@@ -167,12 +167,12 @@ def admin_choice(msg):
         bot.register_next_step_handler(msg, get_pr_name)
     elif msg.text == 'Удалить продукт':
         bot.send_message(admin_id, 'Выберите товар!',
-                         reply_markup=bt.pr_buttons(db.get_all_pr()))
+                         reply_markup=bt.choose_pr_buttons(db.get_all_pr()))
         # Переход на этап выбора продукта
         bot.register_next_step_handler(msg, pr_to_del)
     elif msg.text == 'Изменить количество':
         bot.send_message(admin_id, 'Выберите товар!',
-                         reply_markup=bt.pr_buttons(db.get_all_pr()))
+                         reply_markup=bt.choose_pr_buttons(db.get_all_pr()))
         # Переход на этап выбора продукта
         bot.register_next_step_handler(msg, pr_to_change)
 
