@@ -5,7 +5,7 @@ from geopy import Nominatim
 
 
 # Создаем объект бота
-bot = telebot.TeleBot('7117428954:AAGYDL9dS7gtQghi1eujdNom65-mRKg1vQ4')
+bot = telebot.TeleBot('TOKEN')
 # Работа с картами
 geolocator = Nominatim(user_agent='Mozilla/5.0 '
                                   '(Windows NT 10.0; Win64; x64) '
@@ -195,8 +195,7 @@ def pr_to_change(msg):
     bot.register_next_step_handler(msg, change_confirm, pr_name)
 
 
-# Обработка текстовых сообщений
-@bot.message_handler(content_types=['text'])
+
 # Подтверждение удаления
 def del_confirm(msg, pr_name):
     admin_id = msg.from_user.id

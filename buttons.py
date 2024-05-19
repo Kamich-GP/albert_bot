@@ -60,6 +60,7 @@ def confirm_buttons():
     no = types.KeyboardButton('Нет')
     # Добавляем кнопки в пространство
     kb.add(yes, no)
+    return kb
 
 
 # Кнопки вывода товаров
