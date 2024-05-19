@@ -96,14 +96,14 @@ def cart_handle(call):
     for i in user_cart:
         text += (f'Товар: {i[1]}\n'
                  f'Количество {i[2]}\n\n')
-        total += db.get_exact_price(i[1])[0]
+        total += db.get_exact_price(i[1])[0] * i[2]
     text += str(total)
     if call.data == 'cart':
         bot.send_message(chat_id, text, reply_markup=bt.cart_buttons())
     elif call.data == 'order':
-        text.replace('Ваша корзина:', 'Новый заказ!')
+        text = text.replace('Ваша корзина:', 'Новый заказ!')
         info = db.make_order(chat_id)
-        text += (f'id Пользователя: {user_cart[0][0]}\n'
+        text += (f'Пользователь: @{call.message.chat.username}\n'
                  f'Адрес: {info[2][0]}')
         bot.send_message(-4273695435, text)
         bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
@@ -178,57 +178,54 @@ def admin_choice(msg):
 
 
 # Удаление
-@bot.callback_query_handler(lambda call: int(call.data) in db.get_pr_id())
-def pr_to_del(call):
-    chat_id = call.message.chat.id
-    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
-    bot.send_message(chat_id, 'Вы уверены?',
+def pr_to_del(msg):
+    admin_id = msg.from_user.id
+    pr_name = msg.text
+    bot.send_message(admin_id, 'Вы уверены?',
                      reply_markup=bt.confirm_buttons())
-    pr_id = int(call.data)
-    bot.register_next_step_handler(call, del_confirm, pr_id)
+    bot.register_next_step_handler(msg, del_confirm, pr_name)
 
 
-@bot.callback_query_handler(lambda call: int(call.data) in db.get_pr_id())
 # Изменение кол-ва
-def pr_to_change(call):
-    chat_id = call.message.chat.id
-    bot.delete_message(chat_id=chat_id, message_id=call.message.message_id)
-    pr_id = int(call.data)
-    bot.send_message(chat_id, 'Сколько товара прибыло?')
-    bot.register_next_step_handler(call, change_confirm, pr_id)
+def pr_to_change(msg):
+    admin_id = msg.from_user.id
+    pr_name = msg.text
+    bot.send_message(admin_id, 'Сколько товара прибыло?',
+                     reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.register_next_step_handler(msg, change_confirm, pr_name)
 
 
 # Обработка текстовых сообщений
 @bot.message_handler(content_types=['text'])
 # Подтверждение удаления
-def del_confirm(call, pr_id):
-    chat_id = call.message.chat.id
-    if call.message.text == 'Да':
-        db.del_pr(pr_id)
-        bot.send_message(chat_id, 'Товар успешно удален!',
+def del_confirm(msg, pr_name):
+    admin_id = msg.from_user.id
+    if msg.text == 'Да':
+        db.del_pr(pr_name)
+        bot.send_message(admin_id, 'Товар успешно удален!',
                          reply_markup=bt.admin_menu())
         # Возврат на этап выбора
-        bot.register_next_step_handler(call, admin_choice)
-    elif call.message.text == 'Нет':
-        bot.send_message(chat_id, 'Ну ок хули',
+        bot.register_next_step_handler(msg, admin_choice)
+    elif msg.text == 'Нет':
+        bot.send_message(admin_id, 'Ну ок хули',
                          reply_markup=bt.admin_menu())
         # Возврат на этап выбора
-        bot.register_next_step_handler(call, admin_choice)
+        bot.register_next_step_handler(msg, admin_choice)
 
 
 # Подтверждения добавления кол-ва
-def change_confirm(call, pr_id):
-    chat_id = call.message.chat.id
-    if call.message.text.isnumeric():
-        db.change_pr_count(pr_id, int(call.message.text))
-        bot.send_message(chat_id, 'Кол-во продукта изменено!',
+def change_confirm(msg, pr_name):
+    admin_id = msg.from_user.id
+    if msg.text.isnumeric():
+        db.change_pr_count(pr_name, int(msg.text))
+        bot.send_message(admin_id, 'Кол-во продукта изменено!',
                          reply_markup=bt.admin_menu())
         # Возврат на этап выбора
-        bot.register_next_step_handler(call, admin_choice)
+        bot.register_next_step_handler(msg, admin_choice)
     else:
-        bot.send_message(chat_id, 'Пишите кол-во цифрами!')
+        bot.send_message(admin_id, 'Пишите кол-во цифрами!')
         # Возврат на подтверждение кол-ва
-        bot.register_next_step_handler(call, change_confirm, pr_id)
+        bot.register_next_step_handler(msg, change_confirm, pr_name)
 
 
 # Этап получения названия

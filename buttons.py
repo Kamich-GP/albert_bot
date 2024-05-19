@@ -40,6 +40,17 @@ def admin_menu():
     return kb
 
 
+# Кнопки вывода товаров
+def choose_pr_buttons(products):
+    # Создаем пространство
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    # Создаем сами кнопки
+    all_products = [types.KeyboardButton(i[1]) for i in products]
+    # Добавляем кнопки в пространство
+    kb.add(*all_products)
+    return kb
+
+
 # Кнопки для подтверждения
 def confirm_buttons():
     # Создаем пространство

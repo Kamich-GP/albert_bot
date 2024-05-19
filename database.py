@@ -73,20 +73,20 @@ def add_pr(pr_name, pr_des, pr_price, pr_photo, pr_count):
 
 
 # Метод для удаления товара
-def del_pr(id):
-    sql.execute('DELETE FROM products WHERE pr_id=?;', (id,))
+def del_pr(pr_name):
+    sql.execute('DELETE FROM products WHERE pr_name=?;', (pr_name,))
 
     # Фиксируем изменения
     conn.commit()
 
 
 # Метод для изменения количества товара
-def change_pr_count(id, new_count):
+def change_pr_count(pr_name, new_count):
     # Текущее количество товара
-    now_count = sql.execute('SELECT pr_count FROM products WHERE pr_id=?;', (id,)).fetchone()
+    now_count = sql.execute('SELECT pr_count FROM products WHERE pr_name=?;', (pr_name,)).fetchone()
     # Новое количество
     plus_count = now_count[0] + new_count
-    sql.execute('UPDATE products SET pr_count=? WHERE pr_id=?;', (plus_count, id))
+    sql.execute('UPDATE products SET pr_count=? WHERE pr_name=?;', (plus_count, pr_name))
     # Фиксируем изменения
     conn.commit()
 
